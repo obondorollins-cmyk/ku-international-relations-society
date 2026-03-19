@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KUIRS</title>
+
+<style>
+body{font-family:Segoe UI;background:#f4f6f9;margin:0;}
+nav{background:#0d2b6b;padding:15px;color:white;display:flex;justify-content:space-between;}
+nav h2{color:gold;}
+header{text-align:center;padding:60px;background:#1b3f94;color:white;}
+.btn{background:gold;color:#0d2b6b;padding:12px 20px;border-radius:10px;cursor:pointer;}
+section{padding:30px;max-width:500px;margin:auto;}
+.card{background:white;padding:20px;border-radius:10px;box-shadow:0 5px 10px rgba(0,0,0,0.1);}
+input{width:100%;padding:10px;margin:10px 0;}
+button{width:100%;padding:10px;background:#0d2b6b;color:white;border:none;}
+.toggle{color:#0d2b6b;cursor:pointer;text-align:center;margin-top:10px;}
+.hidden{display:none;}
+</style>
+</head>
+
+<body>
+
+<nav>
+<h2>KUIRS</h2>
+</nav>
+
+<header>
+<h1>Kenyatta University International Relations Society</h1>
+<p>Mastering the Art of Diplomacy</p>
+<a href="#auth" class="btn">Join Us</a>
+</header>
+
+<section id="auth">
+
+<div class="card" id="signup">
+<h3>Sign Up</h3>
+<input type="text" id="name" placeholder="Full Name">
+<input type="text" id="course" placeholder="Course">
+<input type="password" id="password" placeholder="Password">
+<button onclick="signup()">Register</button>
+<p class="toggle" onclick="showLogin()">Already registered? Sign In</p>
+</div>
+
+<div class="card hidden" id="login">
+<h3>Sign In</h3>
+<input type="text" id="loginMemberId" placeholder="Member ID">
+<input type="password" id="loginPassword" placeholder="Password">
+<button onclick="login()">Login</button>
+<p class="toggle" onclick="showSignup()">No account? Sign Up</p>
+</div>
+
+</section>
+
+<script>
+
+// SWITCH FORMS
+function showLogin(){
+document.getElementById('signup').classList.add('hidden');
+document.getElementById('login').classList.remove('hidden');
+}
+
+function showSignup(){
+document.getElementById('login').classList.add('hidden');
+document.getElementById('signup').classList.remove('hidden');
+}
+
+// GENERATE MEMBER ID (AA12B)
+function generateMemberId(){
+let letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+let part1=letters[Math.floor(Math.random()*26)];
+let part2=letters[Math.floor(Math.random()*26)];
+let numbers=Math.floor(10 + Math.random()*90); // 2 digits
+let part3=letters[Math.floor(Math.random()*26)];
+
+return part1 + part2 + numbers + part3;
+}
+
+// SIGN UP
+function signup(){
+let name=document.getElementById('name').value;
+let course=document.getElementById('course').value;
+let password=document.getElementById('password').value;
+
+if(name && course && password){
+
+let users=JSON.parse(localStorage.getItem('users'))||[];
+
+// generate unique ID
+let memberId;
+do{
+memberId=generateMemberId();
+}while(users.find(u=>u.memberId===memberId));
+
+users.push({name,course,password,memberId});
+localStorage.setItem('users',JSON.stringify(users));
+
+alert("Registered successfully! Your Member ID is: " + memberId);
+
+showLogin();
+}
+}
+
+// LOGIN
+function login(){
+let memberId=document.getElementById('loginMemberId').value;
+let password=document.getElementById('loginPassword').value;
+
+let users=JSON.parse(localStorage.getItem('users'))||[];
+let user=users.find(u=>u.memberId===memberId && u.password===password);
+
+if(user){
+alert("Welcome "+user.name);
+}else{
+alert("Invalid Member ID or Password");
+}
+}
+
+</script>
+
+</body>
+</html>
