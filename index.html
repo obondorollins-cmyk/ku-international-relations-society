@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KUIRS - Kenyatta University International Relations Society</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin:0; background-color:#f4f4f4; }
+    header { background-color:#0a2c6b; color:#fff; text-align:center; padding:50px 20px; }
+    header h1 { margin:0; font-size:2rem; }
+    header h2 { margin:10px 0; }
+    header p { font-size:1.2rem; margin-bottom: 20px; }
+    header .joinBtn { background-color:#ffd500; color:#0a2c6b; border:none; padding:12px 25px; font-size:1rem; cursor:pointer; border-radius:5px; text-decoration:none; }
+
+    main { max-width:1000px; margin:auto; padding:20px; }
+    .hidden { display:none; }
+
+    /* Vision & Mission Section */
+    #visionMission { background:#fff; padding:20px; margin:20px auto; border-radius:10px; box-shadow:0 2px 8px rgba(0,0,0,0.1); text-align:center; }
+    #visionMission h3 { color:#0a2c6b; margin-bottom:10px; }
+    #visionMission p { font-size:1rem; margin-bottom:15px; }
+
+    input, button { padding:10px; margin:5px 0; border-radius:5px; border:1px solid #ccc; width:100%; }
+    button { cursor:pointer; background-color:#0a2c6b; color:#fff; border:none; }
+
+    #postsContainer { display:grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); gap:20px; margin-top:20px; }
+    .postCard { border:1px solid #ccc; border-radius:10px; padding:15px; background-color:#fff; }
+    .postCard img { width:100%; border-radius:10px; margin-bottom:10px; }
+  </style>
+</head>
+<body>
+
+<!-- Front Page -->
+<header id="frontPage">
+  <h1>KUIRS</h1>
+  <h2>Kenyatta University International Relations Society</h2>
+  <p>Mastering the Art of Diplomacy</p>
+  <button class="joinBtn" onclick="showAuth()">Join Us</button>
+</header>
+
+<!-- Vision & Mission -->
+<section id="visionMission">
+  <h3>Vision</h3>
+  <p>To establish a gold standard for diplomatic fellowship where academic knowledge transforms into professional mastery.</p>
+  <h3>Mission</h3>
+  <p>To foster a high-caliber community of thinkers and diplomacy strategists, bridging academic theory with the practical art of international diplomacy.</p>
+</section>
+
+<!-- Registration / Sign In Page -->
+<main id="authPage" class="hidden">
+  <h2 style="text-align:center; color:#0a2c6b;">Register / Sign In</h2>
+  <input type="text" id="fullName" placeholder="Full Name">
+  <input type="text" id="course" placeholder="Course">
+  <input type="password" id="password" placeholder="Password">
+  <button onclick="registerOrLogin()">Register / Sign In</button>
+  <p>Your Member ID will be auto-generated upon registration.</p>
+</main>
+
+<!-- Dashboard Page -->
+<main id="dashboard" class="hidden">
+  <h2 style="color:#0a2c6b;">Welcome, <span id="userName"></span>!</h2>
+  <p>Your Member ID: <span id="memberID"></span></p>
+  <h3>Add Post</h3>
+  <input type="text" id="postTitle" placeholder="Post Title">
+  <input type="text" id="postDesc" placeholder="Post Description">
+  <input type="text" id="postImage" placeholder="Image URL (optional)">
+  <button onclick="addPost()">Add Post</button>
+
+  <h3>All Posts</h3>
+  <div id="postsContainer"></div>
+</main>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  // 🔹 Replace with your Firebase config
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  let currentUser = null;
+
+  function showAuth() {
+    document.getElementById('frontPage').classList.add('hidden');
+    document.getElementById('visionMission').classList.add('hidden');
+    document.getElementById('authPage').classList.remove('hidden');
+  }
+
+  function generateMemberID() {
+    const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const digits = "0123456789";
+    return letters.charAt(Math.floor(Math.random()*letters.length)) +
+           letters.charAt(Math.floor(Math.random()*letters.length)) +
+           digits.charAt(Math.floor(Math.random()*digits.length)) +
+           digits.charAt(Math.floor(Math.random()*digits.length)) +
+           letters.charAt(Math.floor(Math.random()*letters.length));
+  }
+
+  async function registerOrLogin() {
+    const name = document.getElementById('fullName').value.trim();
+    const course = document.getElementById('course').value.trim();
+    const pass = document.getElementById('password').value.trim();
+    if(!name || !course || !pass){ alert("Fill all fields."); return; }
+
+    const userRef = db.collection('users').doc(name.toLowerCase());
+    const doc = await userRef.get();
+
+    if(doc.exists) {
+      if(doc.data().password === pass) {
+        alert("Welcome back, "+name+"!");
+        currentUser = doc.data();
+      } else { alert("Password incorrect."); return; }
+    } else {
+      const memberID = generateMemberID();
+      await userRef.set({ fullName:name, course:course, password:pass, memberID });
+      currentUser = { fullName:name, course, memberID };
+      alert("Registered successfully! Your Member ID: "+memberID);
+    }
+    showDashboard();
+  }
+
+  function showDashboard() {
+    document.getElementById('authPage').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+    document.getElementById('userName').innerText = currentUser.fullName;
+    document.getElementById('memberID').innerText = currentUser.memberID;
+    loadPosts();
+  }
+
+  async function addPost() {
+    const title = document.getElementById('postTitle').value.trim();
+    const desc = document.getElementById('postDesc').value.trim();
+    const img = document.getElementById('postImage').value.trim();
+    if(!title || !desc){ alert("Title & Description required."); return; }
+
+    await db.collection('posts').add({ title, desc, img, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+    document.getElementById('postTitle').value="";
+    document.getElementById('postDesc').value="";
+    document.getElementById('postImage').value="";
+    loadPosts();
+  }
+
+  async function loadPosts() {
+    const container = document.getElementById('postsContainer');
+    container.innerHTML="";
+    const snapshot = await db.collection('posts').orderBy('timestamp','desc').get();
+    snapshot.forEach(doc => {
+      const post = doc.data();
+      const div = document.createElement('div');
+      div.classList.add('postCard');
+      div.innerHTML = `
+        ${post.img ? `<img src="${post.img}" alt="${post.title}">` : ""}
+        <h4 style="color:#0a2c6b;">${post.title}</h4>
+        <p>${post.desc}</p>
+      `;
+      container.appendChild(div);
+    });
+  }
+</script>
+</body>
+</html>
