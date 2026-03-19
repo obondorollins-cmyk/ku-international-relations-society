@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KUIRS</title>
+
+<style>
+body{font-family:Segoe UI;margin:0;background:#f4f6f9;color:#1b2a4e;}
+nav{background:#0d2b6b;padding:15px;color:white;display:flex;justify-content:space-between;}
+nav h2{color:gold;}
+header{text-align:center;padding:60px;background:#1b3f94;color:white;}
+header img{width:120px;margin-bottom:15px;}
+.btn{background:gold;color:#0d2b6b;padding:12px 20px;border-radius:10px;cursor:pointer;font-weight:bold;}
+section{padding:40px;max-width:900px;margin:auto;}
+.card{background:white;padding:20px;border-radius:10px;margin-top:20px;box-shadow:0 5px 10px rgba(0,0,0,0.1);}
+
+/* POPUP */
+.modal{
+display:none;
+position:fixed;
+top:0;left:0;
+width:100%;height:100%;
+background:rgba(0,0,0,0.6);
+justify-content:center;
+align-items:center;
+}
+
+.modal-content{
+background:white;
+padding:20px;
+border-radius:10px;
+width:90%;
+max-width:400px;
+}
+
+input{width:100%;padding:10px;margin:10px 0;}
+button{width:100%;padding:10px;background:#0d2b6b;color:white;border:none;}
+.toggle{color:#0d2b6b;text-align:center;cursor:pointer;margin-top:10px;}
+.hidden{display:none;}
+.close{float:right;cursor:pointer;font-weight:bold;}
+</style>
+</head>
+
+<body>
+
+<nav>
+<h2>KUIRS</h2>
+</nav>
+
+<header>
+<img src="logo.png">
+<h1>Kenyatta University International Relations Society</h1>
+<p>Mastering the Art of Diplomacy</p>
+<button class="btn" onclick="openModal()">Join Us</button>
+</header>
+
+<section>
+<h2>Vision</h2>
+<div class="card">
+To establish a gold standard for diplomatic excellence and global leadership.
+</div>
+
+<h2>Mission</h2>
+<div class="card">
+To empower students with knowledge, skills, and experience in international relations.
+</div>
+</section>
+
+<!-- POPUP AUTH -->
+<div class="modal" id="authModal">
+
+<div class="modal-content">
+
+<span class="close" onclick="closeModal()">✖</span>
+
+<!-- SIGN UP -->
+<div id="signup">
+<h3>Sign Up</h3>
+<input type="text" id="name" placeholder="Full Name">
+<input type="text" id="course" placeholder="Course">
+<input type="password" id="password" placeholder="Password">
+<button onclick="signup()">Register</button>
+<p class="toggle" onclick="showLogin()">Already registered? Sign In</p>
+</div>
+
+<!-- LOGIN -->
+<div id="login" class="hidden">
+<h3>Sign In</h3>
+<input type="text" id="loginMemberId" placeholder="Member ID">
+<input type="password" id="loginPassword" placeholder="Password">
+<button onclick="login()">Login</button>
+<p class="toggle" onclick="showSignup()">No account? Sign Up</p>
+</div>
+
+</div>
+</div>
+
+<script>
+
+// OPEN/CLOSE MODAL
+function openModal(){
+document.getElementById('authModal').style.display='flex';
+}
+function closeModal(){
+document.getElementById('authModal').style.display='none';
+}
+
+// SWITCH FORMS
+function showLogin(){
+document.getElementById('signup').classList.add('hidden');
+document.getElementById('login').classList.remove('hidden');
+}
+function showSignup(){
+document.getElementById('login').classList.add('hidden');
+document.getElementById('signup').classList.remove('hidden');
+}
+
+// GENERATE MEMBER ID
+function generateMemberId(){
+let letters="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+return letters[Math.floor(Math.random()*26)] +
+       letters[Math.floor(Math.random()*26)] +
+       Math.floor(10 + Math.random()*90) +
+       letters[Math.floor(Math.random()*26)];
+}
+
+// SIGN UP
+function signup(){
+let name=document.getElementById('name').value;
+let course=document.getElementById('course').value;
+let password=document.getElementById('password').value;
+
+if(name && course && password){
+let users=JSON.parse(localStorage.getItem('users'))||[];
+
+let memberId;
+do{
+memberId=generateMemberId();
+}while(users.find(u=>u.memberId===memberId));
+
+users.push({name,course,password,memberId});
+localStorage.setItem('users',JSON.stringify(users));
+
+alert("Registered! Your Member ID is: " + memberId);
+
+showLogin();
+}
+}
+
+// LOGIN
+function login(){
+let memberId=document.getElementById('loginMemberId').value;
+let password=document.getElementById('loginPassword').value;
+
+let users=JSON.parse(localStorage.getItem('users'))||[];
+let user=users.find(u=>u.memberId===memberId && u.password===password);
+
+if(user){
+alert("Welcome "+user.name);
+closeModal();
+}else{
+alert("Invalid details");
+}
+}
+
+</script>
+
+</body>
+</html>
